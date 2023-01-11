@@ -1,0 +1,15 @@
+# Rockchip RK3588S SoC octa core 4-16GB SoC 1GBe PoE eMMC USB3
+BOARD_NAME="COOLPI 4B"
+BOARDFAMILY="rockchip-rk3588s"
+BOOTCONFIG="rk3588s_cp4b_defconfig"
+KERNEL_TARGET="legacy,edge"
+FULL_DESKTOP="yes"
+BOOT_LOGO="desktop"
+BOOT_FDT_FILE="rockchip/rk3588s-cp4.dtb"
+BOOT_SCENARIO="spl-blobs"
+BOOTSCRIPT="boot-coolpi4b.cmd:boot.cmd"
+WIREGUARD="no"
+BOOT_SUPPORT_SPI="yes"
+IMAGE_PARTITION_TABLE="gpt"
+SKIP_BOOTSPLASH="yes" # Skip boot splash patch, conflicts with CONFIG_VT=yes
+BOOTFS_TYPE="fat"
