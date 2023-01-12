@@ -7,7 +7,7 @@ BOOTENV_FILE='rockchip64.txt'
 UBOOT_TARGET_MAP=";;idbloader.bin uboot.img trust.bin"
 BOOTDELAY=0
 OVERLAY_PREFIX='rockchip'
-SERIALCON=${SERIALCON:=$([ $BRANCH == "legacy" ] && echo "ttyFIQ0:1500000" || echo "ttyS2:1500000")}
+SERIALCON="ttyS0:115200"
 GOVERNOR="ondemand"
 ATFPATCHDIR='atf-rockchip64'
 BOOTPATCHDIR="${BOOTPATCHDIR:-"u-boot-rockchip64"}"
@@ -350,6 +350,10 @@ family_tweaks() {
 		else
 			cp -R $SRC/packages/blobs/jetson/firmware/* $SDCARD/lib/firmware/
 		fi
+	fi
+	
+	if [[ $BOARD == coolpi-4b ]]; then
+		cp -R $SRC/packages/blobs/coolpi/firmware/* $SDCARD/lib/firmware/
 	fi
 }
 
