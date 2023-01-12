@@ -354,6 +354,9 @@ family_tweaks() {
 	
 	if [[ $BOARD == coolpi-4b ]]; then
 		cp -R $SRC/packages/blobs/coolpi/firmware/* $SDCARD/lib/firmware/
+		sed -e 's/exit 0//g' -i $SDCARD/etc/rc.local
+		echo "su -c 'hciattach -n /dev/ttyS1 any 1500000 &'" >> $SDCARD/etc/rc.local
+		echo "exit 0" >> $SDCARD/etc/rc.local
 	fi
 }
 
