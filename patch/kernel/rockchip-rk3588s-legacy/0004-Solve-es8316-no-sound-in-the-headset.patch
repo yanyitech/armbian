@@ -1,0 +1,233 @@
+From 64d7f8efec8cde3aee6a9f7db80cdf8014b8eea9 Mon Sep 17 00:00:00 2001
+From: george <george@cool-pi.com>
+Date: Fri, 13 Jan 2023 09:27:30 +0800
+Subject: [PATCH 2/3] Solve es8316 no sound in the headset
+
+---
+ sound/soc/codecs/es8316.c | 56 ++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 27 deletions(-)
+
+diff --git a/sound/soc/codecs/es8316.c b/sound/soc/codecs/es8316.c
+index 1b9a94f8c..39c0f1188 100644
+--- a/sound/soc/codecs/es8316.c
++++ b/sound/soc/codecs/es8316.c
+@@ -47,12 +47,12 @@ static const struct reg_default es8316_reg_defaults[] = {
+ 	{0x00, 0x03}, {0x01, 0x03}, {0x02, 0x00}, {0x03, 0x20},
+ 	{0x04, 0x11}, {0x05, 0x00}, {0x06, 0x11}, {0x07, 0x00},
+ 	{0x08, 0x00}, {0x09, 0x01}, {0x0a, 0x00}, {0x0b, 0x00},
+-	{0x0c, 0xf8}, {0x0d, 0x3f}, {0x0e, 0x00}, {0x0f, 0x00},
++	{0x0c, 0xf8}, {0x0d, 0x00}, {0x0e, 0x00}, {0x0f, 0x00},
+ 	{0x10, 0x01}, {0x11, 0xfc}, {0x12, 0x28}, {0x13, 0x00},
+ 	{0x14, 0x00}, {0x15, 0x33}, {0x16, 0x00}, {0x17, 0x00},
+ 	{0x18, 0x88}, {0x19, 0x06}, {0x1a, 0x22}, {0x1b, 0x03},
+ 	{0x1c, 0x0f}, {0x1d, 0x00}, {0x1e, 0x80}, {0x1f, 0x80},
+-	{0x20, 0x00}, {0x21, 0x00}, {0x22, 0xc0}, {0x23, 0x00},
++	{0x20, 0x00}, {0x21, 0x00}, {0x22, 0x30}, {0x23, 0x00},
+ 	{0x24, 0x01}, {0x25, 0x08}, {0x26, 0x10}, {0x27, 0xc0},
+ 	{0x28, 0x00}, {0x29, 0x1c}, {0x2a, 0x00}, {0x2b, 0xb0},
+ 	{0x2c, 0x32}, {0x2d, 0x03}, {0x2e, 0x00}, {0x2f, 0x11},
+@@ -103,8 +103,10 @@ static void es8316_enable_spk(struct es8316_priv *es8316, bool enable)
+ {
+ 	bool level;
+ 
+-	level = enable ? es8316->spk_active_level : !es8316->spk_active_level;
+-	gpio_set_value(es8316->spk_ctl_gpio, level);
++	if(es8316->spk_ctl_gpio > 0) {
++		level = enable ? es8316->spk_active_level : !es8316->spk_active_level;
++		gpio_set_value(es8316->spk_ctl_gpio, level);
++	}
+ }
+ 
+ static const DECLARE_TLV_DB_SCALE(dac_vol_tlv, -9600, 50, 1);
+@@ -577,6 +579,7 @@ static int es8316_set_dai_sysclk(struct snd_soc_dai *codec_dai,
+ 		return 0;
+ 	}
+ 
++
+ 	return 0;
+ }
+ 
+@@ -660,11 +663,9 @@ static int es8316_set_dai_fmt(struct snd_soc_dai *codec_dai,
+ 	default:
+ 		return -EINVAL;
+ 	}
+-
+ 	snd_soc_component_write(component, ES8316_IFACE, iface);
+ 	snd_soc_component_write(component, ES8316_ADC_IFACE, adciface);
+ 	snd_soc_component_write(component, ES8316_DAC_IFACE, daciface);
+-
+ 	return 0;
+ }
+ 
+@@ -703,7 +704,8 @@ static int es8316_pcm_startup(struct snd_pcm_substream *substream,
+ 				    ES8316_CLKMGR_DAC_ANALOG_EN);
+ 		msleep(50);
+ 	} else {
+-		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0x30);
++		snd_soc_component_update_bits(component,
++				    ES8316_ADC_PDN_LINSEL_REG22, 0x30, 0x30);
+ 		snd_soc_component_update_bits(component, ES8316_CLKMGR_CLKSW_REG01,
+ 				    ES8316_CLKMGR_ADC_MCLK_MASK |
+ 				    ES8316_CLKMGR_ADC_ANALOG_MASK,
+@@ -738,7 +740,7 @@ static void es8316_pcm_shutdown(struct snd_pcm_substream *substream,
+ 				    ES8316_CLKMGR_DAC_ANALOG_MASK,
+ 				    ES8316_CLKMGR_DAC_ANALOG_DIS);
+ 	} else {
+-		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0xC0);
++		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0x30);
+ 		snd_soc_component_update_bits (component, ES8316_CLKMGR_CLKSW_REG01,
+ 				    ES8316_CLKMGR_ADC_MCLK_MASK |
+ 				    ES8316_CLKMGR_ADC_ANALOG_MASK,
+@@ -753,6 +755,7 @@ static void es8316_pcm_shutdown(struct snd_pcm_substream *substream,
+ 	}
+ }
+ 
++
+ static int es8316_pcm_hw_params(struct snd_pcm_substream *substream,
+ 				struct snd_pcm_hw_params *params,
+ 				struct snd_soc_dai *dai)
+@@ -804,7 +807,6 @@ static int es8316_mute(struct snd_soc_dai *dai, int mute, int direction)
+ 		if (!es8316->hp_inserted)
+ 			es8316_enable_spk(es8316, true);
+ 	}
+-
+ 	return 0;
+ }
+ 
+@@ -843,7 +845,7 @@ static int es8316_set_bias_level(struct snd_soc_component *component,
+ 		snd_soc_component_write(component, ES8316_HPMIX_SWITCH_REG14, 0x00);
+ 		snd_soc_component_write(component, ES8316_HPMIX_PDN_REG15, 0x33);
+ 		snd_soc_component_write(component, ES8316_HPMIX_VOL_REG16, 0x00);
+-		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0xC0);
++		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0x30);
+ 		if (!es8316->hp_inserted)
+ 			snd_soc_component_write(component, ES8316_SYS_PDN_REG0D, 0x3F);
+ 		snd_soc_component_write(component, ES8316_SYS_LP1_REG0E, 0x3F);
+@@ -867,6 +869,7 @@ static const struct snd_soc_dai_ops es8316_ops = {
+ 	.set_sysclk = es8316_set_dai_sysclk,
+ 	.mute_stream = es8316_mute,
+ 	.shutdown = es8316_pcm_shutdown,
++	.no_capture_mute = 1,
+ };
+ 
+ static struct snd_soc_dai_driver es8316_dai = {
+@@ -909,7 +912,7 @@ static int es8316_init_regs(struct snd_soc_component *component)
+ 	snd_soc_component_write(component, ES8316_CAL_HPLIV_REG1E, 0x90);
+ 	snd_soc_component_write(component, ES8316_CAL_HPRIV_REG1F, 0x90);
+ 	snd_soc_component_write(component, ES8316_ADC_VOLUME_REG27, 0x00);
+-	snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0xC0);
++	snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0x30);
+ 	snd_soc_component_write(component, ES8316_ADC_D2SEPGA_REG24, 0x00);
+ 	snd_soc_component_write(component, ES8316_ADC_DMIC_REG25, 0x08);
+ 	snd_soc_component_write(component, ES8316_DAC_SET2_REG31, 0x20);
+@@ -940,11 +943,11 @@ static int es8316_init_regs(struct snd_soc_component *component)
+ 	snd_soc_component_write(component, ES8316_SYS_PDN_REG0D, 0x00);
+ 	snd_soc_component_write(component, ES8316_RESET_REG00, 0xC0);
+ 	msleep(50);
+-	snd_soc_component_write(component, ES8316_ADC_PGAGAIN_REG23, 0xA0);
++	snd_soc_component_write(component, ES8316_ADC_PGAGAIN_REG23, 0x10);
+ 	snd_soc_component_write(component, ES8316_ADC_D2SEPGA_REG24, 0x01);
+ 	/* adc ds mode, HPF enable */
+ 	snd_soc_component_write(component, ES8316_ADC_DMIC_REG25, 0x08);
+-	snd_soc_component_write(component, ES8316_ADC_ALC1_REG29, 0xcd);
++	snd_soc_component_write(component, ES8316_ADC_ALC1_REG29, 0xc9);
+ 	snd_soc_component_write(component, ES8316_ADC_ALC2_REG2A, 0x08);
+ 	snd_soc_component_write(component, ES8316_ADC_ALC3_REG2B, 0xa0);
+ 	snd_soc_component_write(component, ES8316_ADC_ALC4_REG2C, 0x05);
+@@ -984,12 +987,11 @@ static int es8316_resume(struct snd_soc_component *component)
+ 		snd_soc_component_write(component, ES8316_SYS_LP1_REG0E, 0xFF);
+ 		snd_soc_component_write(component, ES8316_SYS_LP2_REG0F, 0xFF);
+ 		snd_soc_component_write(component, ES8316_CLKMGR_CLKSW_REG01, 0xF3);
+-		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0xC0);
++		snd_soc_component_write(component, ES8316_ADC_PDN_LINSEL_REG22, 0x30);
+ 	}
+-
+ 	return 0;
+ }
+-/*
++
+ static irqreturn_t es8316_irq_handler(int irq, void *data)
+ {
+ 	struct es8316_priv *es8316 = data;
+@@ -999,7 +1001,7 @@ static irqreturn_t es8316_irq_handler(int irq, void *data)
+ 
+ 	return IRQ_HANDLED;
+ }
+-*/
++
+ /*
+  * Call from rk_headset_irq_hook_adc.c
+  *
+@@ -1027,7 +1029,7 @@ int es8316_headset_detect(int jack_insert)
+ 	return 0;
+ }
+ EXPORT_SYMBOL(es8316_headset_detect);
+-/*
++
+ static void hp_work(struct work_struct *work)
+ {
+ 	struct es8316_priv *es8316;
+@@ -1046,7 +1048,7 @@ static void hp_work(struct work_struct *work)
+ 			es8316_enable_spk(es8316, true);
+ 	}
+ }
+-*/
++
+ static int es8316_probe(struct snd_soc_component *component)
+ {
+ 	struct es8316_priv *es8316 = snd_soc_component_get_drvdata(component);
+@@ -1090,7 +1092,7 @@ static int es8316_probe(struct snd_soc_component *component)
+ 			snd_soc_component_write(component, ES8316_SYS_LP2_REG0F, 0xFF);
+ 			snd_soc_component_write(component, ES8316_CLKMGR_CLKSW_REG01, 0xF3);
+ 			snd_soc_component_write(component,
+-				      ES8316_ADC_PDN_LINSEL_REG22, 0xC0);
++				      ES8316_ADC_PDN_LINSEL_REG22, 0x30);
+ 		}
+ 	}
+ 
+@@ -1132,9 +1134,9 @@ static int es8316_i2c_probe(struct i2c_client *i2c,
+ {
+ 	struct es8316_priv *es8316;
+ 	int ret = -1;
+-	//int hp_irq;
+-	//enum of_gpio_flags flags;
+-	//struct device_node *np = i2c->dev.of_node;
++	int hp_irq;
++	enum of_gpio_flags flags;
++	struct device_node *np = i2c->dev.of_node;
+ 
+ 	es8316 = devm_kzalloc(&i2c->dev, sizeof(*es8316), GFP_KERNEL);
+ 	if (!es8316)
+@@ -1154,7 +1156,7 @@ static int es8316_i2c_probe(struct i2c_client *i2c,
+ 	}
+ 
+ 	i2c_set_clientdata(i2c, es8316);
+-	/*
++	
+ 	es8316->spk_ctl_gpio = of_get_named_gpio_flags(np,
+ 						       "spk-con-gpio",
+ 						       0,
+@@ -1202,8 +1204,7 @@ static int es8316_i2c_probe(struct i2c_client *i2c,
+ 		schedule_delayed_work(&es8316->work,
+ 				      msecs_to_jiffies(es8316->debounce_time));
+ 	}
+-	*/
+-
++	
+ 	ret = snd_soc_register_component(&i2c->dev,
+ 				     &soc_component_dev_es8316,
+ 				     &es8316_dai, 1);
+@@ -1252,8 +1253,9 @@ static struct i2c_driver es8316_i2c_driver = {
+ 	.shutdown = es8316_i2c_shutdown,
+ 	.id_table = es8316_i2c_id,
+ };
+-module_i2c_driver(es8316_i2c_driver);
+ 
++
++module_i2c_driver(es8316_i2c_driver);
+ MODULE_DESCRIPTION("ASoC es8316 driver");
+ MODULE_AUTHOR("Will <will@everset-semi.com>");
+ MODULE_LICENSE("GPL");
+-- 
+2.34.1
+
