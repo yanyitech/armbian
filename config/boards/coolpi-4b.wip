@@ -1,7 +1,7 @@
 # Rockchip RK3588S SoC octa core 4-16GB SoC 1GBe PoE eMMC USB3
 BOARD_NAME="COOLPI 4B"
 BOARDFAMILY="rockchip-rk3588s"
-BOOTCONFIG="rk3588s_cp4b_defconfig"
+BOOTCONFIG="rock-5b-rk3588_defconfig"
 KERNEL_TARGET="legacy,edge"
 FULL_DESKTOP="yes"
 BOOT_LOGO="desktop"
