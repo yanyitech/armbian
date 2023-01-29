@@ -354,11 +354,19 @@ family_tweaks() {
 	
 	if [[ $BOARD == coolpi-4b ]]; then
 		cp -R $SRC/packages/blobs/coolpi/firmware/* $SDCARD/lib/firmware/
+		cp -R $SRC/packages/blobs/coolpi/bin/* $SDCARD/usr/bin/
 		sed -e 's/exit 0//g' -i $SDCARD/etc/rc.local
 		echo "chmod 777 /dev/rga" >> $SDCARD/etc/rc.local
 		echo "chmod 777 /dev/mpp_service" >> $SDCARD/etc/rc.local
 		echo "chmod 777 /dev/dma_heap -R" >> $SDCARD/etc/rc.local
+		echo -e "wifi_id=$(expr substr $(cat /sys/bus/sdio/devices/mmc1\:*\:1/modalias) 10 9)" >> $SDCARD/etc/rc.local	
+		echo -e "if [ $wifi_id = "5449d0145" ]" >> $SDCARD/etc/rc.local
+		echo "then" >> $SDCARD/etc/rc.local
 		echo "hciattach -n /dev/ttyS1 any 1500000 &" >> $SDCARD/etc/rc.local
+		echo -e "elif [ $wifi_id = "02D0dA9BF" ]" >> $SDCARD/etc/rc.local
+		echo "then" >> $SDCARD/etc/rc.local
+		echo "brcm_patchram_plus1 --enable_hci --no2bytes --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/BCM4343B0.hcd /dev/ttyS1 &" >> $SDCARD/etc/rc.local
+		echo "fi" >> $SDCARD/etc/rc.local
 		echo "exit 0" >> $SDCARD/etc/rc.local
 	fi
 }

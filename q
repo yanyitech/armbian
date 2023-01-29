@@ -1,0 +1,24 @@
+[1mdiff --git a/config/sources/families/include/rockchip64_coolpi.inc b/config/sources/families/include/rockchip64_coolpi.inc[m
+[1mindex 187d1082e..f9ead8faf 100755[m
+[1m--- a/config/sources/families/include/rockchip64_coolpi.inc[m
+[1m+++ b/config/sources/families/include/rockchip64_coolpi.inc[m
+[36m@@ -354,11 +354,19 @@[m [mfamily_tweaks() {[m
+ 	[m
+ 	if [[ $BOARD == coolpi-4b ]]; then[m
+ 		cp -R $SRC/packages/blobs/coolpi/firmware/* $SDCARD/lib/firmware/[m
+[32m+[m		[32mcp -R $SRC/packages/blobs/coolpi/bin/* $SDCARD/usr/bin/[m
+ 		sed -e 's/exit 0//g' -i $SDCARD/etc/rc.local[m
+ 		echo "chmod 777 /dev/rga" >> $SDCARD/etc/rc.local[m
+ 		echo "chmod 777 /dev/mpp_service" >> $SDCARD/etc/rc.local[m
+ 		echo "chmod 777 /dev/dma_heap -R" >> $SDCARD/etc/rc.local[m
+[32m+[m		[32mecho -e "wifi_id=$(expr substr $(cat /sys/bus/sdio/devices/mmc1\:*\:1/modalias) 10 9)" >> $SDCARD/etc/rc.local[m[41m	[m
+[32m+[m		[32mecho -e "if [ $wifi_id = "5449d0145" ]" >> $SDCARD/etc/rc.local[m
+[32m+[m		[32mecho "then" >> $SDCARD/etc/rc.local[m
+ 		echo "hciattach -n /dev/ttyS1 any 1500000 &" >> $SDCARD/etc/rc.local[m
+[32m+[m		[32mecho -e "elif [ $wifi_id = "02D0dA9BF" ]" >> $SDCARD/etc/rc.local[m
+[32m+[m		[32mecho "then" >> $SDCARD/etc/rc.local[m
+[32m+[m		[32mecho "brcm_patchram_plus1 --enable_hci --no2bytes --tosleep 200000 --baudrate 1500000 --patchram /lib/firmware/BCM4343B0.hcd /dev/ttyS1 &" >> $SDCARD/etc/rc.local[m
+[32m+[m		[32mecho "fi" >> $SDCARD/etc/rc.local[m
+ 		echo "exit 0" >> $SDCARD/etc/rc.local[m
+ 	fi[m
+ }[m
