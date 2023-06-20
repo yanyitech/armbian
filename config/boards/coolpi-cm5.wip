@@ -1,0 +1,14 @@
+# Rockchip RK3588 SoC octa core 4-32GB SoC 2X1GBe PoE eMMC USB3 NvME
+BOARD_NAME="CoolPi CM5"
+BOARDFAMILY="rockchip-rk3588cm5"
+BOOTCONFIG="rock-5b-rk3588_defconfig"
+KERNEL_TARGET="legacy,edge"
+FULL_DESKTOP="yes"
+BOOT_LOGO="desktop"
+BOOT_FDT_FILE="rockchip/rk3588-cpcm5-evb-v11.dtb"
+BOOT_SCENARIO="spl-blobs"
+WIREGUARD="no"
+BOOT_SUPPORT_SPI="yes"
+IMAGE_PARTITION_TABLE="gpt"
+SKIP_BOOTSPLASH="yes" # Skip boot splash patch, conflicts with CONFIG_VT=yes
+BOOTFS_TYPE="ext4"
