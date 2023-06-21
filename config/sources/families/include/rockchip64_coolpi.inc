@@ -352,7 +352,7 @@ family_tweaks() {
 		fi
 	fi
 	
-	if [[ $BOARD == coolpi-4b ]]; then
+	if [[ $BOARD == coolpi-* ]]; then
 		cp -R $SRC/packages/blobs/coolpi/firmware/* $SDCARD/lib/firmware/
 		cp -R $SRC/packages/blobs/coolpi/bin/* $SDCARD/usr/bin/
 		sed -e 's/exit 0//g' -i $SDCARD/etc/rc.local
