@@ -512,7 +512,7 @@ patch_drivers_network()
 	driver_rtl8192EU
 	driver_rtl8811_rtl8812_rtl8814_rtl8821
 	driver_xradio_xr819
-	driver_rtl8811CU_rtl8821C
+	#driver_rtl8811CU_rtl8821C
 	driver_rtl8188EU_rtl8188ETV
 	driver_rtl88x2bu
 	driver_rtl88x2cs
